@@ -23,15 +23,25 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
 
-      # Numeric input for "Tracer"
+      # Name of Trace Compound
       textInput("tracer.name", 
-                 "Tracer Compound", 
+                 "Tracer Compound Name", 
                  value = ""),
+      
+      # Molecular Weight (g/mol) of tracer compound
+      numericInput("MW.g.per.mol", 
+                   "Molecular Weight of Tracer Compound (g/mol):", 
+                   value = NA),
+      
+      # price of tracer compound ($/mg)
+      numericInput("price.per.mg", 
+                   "Dollar price of tracer ($/mg)", 
+                   value = NA),
       
       # Expected Fcirc (Ra, nmol/min)
       numericInput("fcirc.per.mouse", 
                    "Expected Fcirc (Ra, nmol/min)", 
-                   value = 10),
+                   value = 250),
       
       # Numeric input for "Target Labeling"
       sliderInput("target.labeling", 
@@ -61,7 +71,8 @@ ui <- fluidPage(
       textOutput("rate"),
       textOutput("total.tracer"),
       textOutput("recommended.tracer"),
-      textOutput("concentration")
+      textOutput("concentration"),
+      textOutput("recommended.cost")
     )
   )
 )
@@ -90,12 +101,21 @@ server <- function(input, output) {
     # calculate tracer concentration
     tracer.mM <- rate.nmol.per.min / input$rate.ul.per.min
     
+    # total grams of tracer recommended
+    tracer.mg <- tracer.mM * recommended.mL/1000 * input$MW.g.per.mol
+    
+    # estimated cost of tracer
+    tracer.cost <- tracer.mg * input$price.per.mg
+    tracer.cost <- round(tracer.cost, digits=2)
+    
     # output is a named list
     list.out <-
       list(rate.nmol.per.min = rate.nmol.per.min,
            total.mL = total.mL,
            recommended.mL = recommended.mL,
-           tracer.mM = tracer.mM)
+           tracer.mM = tracer.mM,
+           tracer.mg = tracer.mg,
+           tracer.cost = tracer.cost)
     
     # round all values to 3 digits
     lapply(list.out, FUN=round, digits=3)
@@ -121,6 +141,11 @@ server <- function(input, output) {
   # concentration of tracer
   output$concentration <- renderText({
     paste0("Tracer concentration in infusate: ", maths()$tracer.mM, " mM")
+  })
+  
+  # total grams and estimated cost recommended
+  output$recommended.cost <- renderText({
+    paste0("Estimated cost of ", maths()$tracer.mg, " mg tracer is $", maths()$tracer.cost)
   })
   
   
