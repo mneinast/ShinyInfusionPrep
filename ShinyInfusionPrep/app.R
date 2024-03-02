@@ -95,8 +95,8 @@ server <- function(input, output) {
     # calculate total volume (mL)
     total.mL <- input$rate.ul.per.min / 1000 * input$hours * 60 * input$mice
     
-    # calculate recommended volume (mL)
-    recommended.mL <- if(total.mL < 4) {total.mL + 1} else {total.mL + 2}
+    # calculate recommended volume (mL)...adds 0.3 mL dead volume per mouse and an extra bit depending on how many mice
+    recommended.mL <- if(total.mL < 4) {total.mL + 1 + 0.3*input$mice} else {total.mL + 2 + 0.3*input$mice}
     
     # calculate tracer concentration
     tracer.mM <- rate.nmol.per.min / input$rate.ul.per.min
